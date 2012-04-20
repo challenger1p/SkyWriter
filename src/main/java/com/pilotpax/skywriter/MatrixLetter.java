@@ -149,7 +149,6 @@ public class MatrixLetter {
 				}
 			}
 		}	
-//		System.arraycopy(charMatrix, matrixIndex*charMatrixHeight, myMatrix, 0, charMatrixHeight);
 	}
 	
 	public void setLocation(Location loc) {
@@ -161,32 +160,29 @@ public class MatrixLetter {
 	}
 	
 	public void disperseCloud() {
-		for (int x = 0; x < charMatrixHeight; x++) {
-			for (int z = 0; z < charMatrixWidth; z++) {
-				if (myMatrix[x][z] != 0) {
-					if (z < (charMatrixWidth-1) && myMatrix[x][z+1] == 0) {
-						myMatrix[x][z+1] = (int) (((double) myMatrix[x][z]) * (0.3 * Math.random()));
-						myMatrix[x][z] = (int) (((double) myMatrix[x][z]) * (1.0 - 0.3 * Math.random()));
-						z++;
-					} else {
-						myMatrix[x][z] = (int) (((double) myMatrix[x][z]) * (1.0 - 0.3 * Math.random()));
-					}
-				}
+		int[][] convolve = new int[charMatrixHeight][charMatrixWidth];
+		
+		for (int z = 0; z < charMatrixWidth; z++) {
+			for (int x = 0; x < charMatrixHeight; x++) {
+				convolve[x][z] =  (int) ( (((double) myMatrix[x][z]) * 0.57) +
+						(x>0 ? ((double) myMatrix[x-1][z]) * 0.35 : 0.0) +
+						(x>1 ? ((double) myMatrix[x-2][z]) * 0.08 : 0.0) );						
 			}
 		}
+		myMatrix = convolve;
 	}
-	
+
 	public void incrementTime() {
 		myTime = myTime + 1;
 		eraseLetter();
-		if (myTime < 10) {
+		if (myTime < 20) {
 			disperseCloud();
 			makeLetter();
 		}
 	}
 	
 	public boolean isLetterOld() {
-		if (myTime < 10) {
+		if (myTime < 20) {
 			return false;  
 		} else {
 			return true;   // delete this letter
@@ -219,8 +215,8 @@ public class MatrixLetter {
     	return(new Location(world, xloc + charMatrixHeight, yloc, zloc));
 	}
 	
-	private byte mapTimeToColor() {
-		if (myTime > 50) {
+	private byte mapTimeToColor(int value) {
+		if (value > 50) {
 			return((byte) 0x8);  // Light gray
 		} else {
 			return((byte) 0x0);  // White
@@ -239,7 +235,7 @@ public class MatrixLetter {
             		Block b = world.getBlockAt(xloc+x,yloc,zloc+z);
             		if (b.getType() == Material.AIR) {
             			b.setType(Material.WOOL);
-            			b.setData(mapTimeToColor());  
+            			b.setData(mapTimeToColor(myMatrix[x][z]));  
             		} else {
             			myMatrix[x][z] = 0;
             		}
