@@ -20,12 +20,14 @@ along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import org.bukkit.block.Block;
-import org.bukkit.material.Wool;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 
 public class MatrixLetter {
+	
+	private static int oldAge = 20;
+	private static int drawThreshold = 10;
 	
 	private static int charMatrixHeight = 8;
 	private static int charMatrixWidth = 8;
@@ -122,6 +124,8 @@ public class MatrixLetter {
 		'-', '='
 	};
 	
+	private static int undefChar = 61;
+	
 	char myChar;
 	int matrixIndex;
 	int[][] myMatrix;
@@ -137,7 +141,7 @@ public class MatrixLetter {
 				break;
 			}
 		}
-		if (matrixIndex == -1) { matrixIndex = 61; }  // point to '?' if undefined character
+		if (matrixIndex == -1) { matrixIndex = undefChar; }  // point to '?' if undefined character
 		
 		myMatrix = new int[charMatrixHeight][charMatrixWidth];
 		for (int x = 0; x < charMatrixHeight; x++) {
@@ -159,14 +163,15 @@ public class MatrixLetter {
 		myTime = t;
 	}
 	
+	// sort of a one-sided gaussian blur kernel...
 	public void disperseCloud() {
 		int[][] convolve = new int[charMatrixHeight][charMatrixWidth];
 		
 		for (int z = 0; z < charMatrixWidth; z++) {
 			for (int x = 0; x < charMatrixHeight; x++) {
 				convolve[x][z] =  (int) ( (((double) myMatrix[x][z]) * 0.57) +
-						(x>0 ? ((double) myMatrix[x-1][z]) * 0.35 : 0.0) +
-						(x>1 ? ((double) myMatrix[x-2][z]) * 0.08 : 0.0) );						
+						(x>0 ? ((double) myMatrix[x-1][z]) * 0.21 : 0.0) +
+						(x>1 ? ((double) myMatrix[x-2][z]) * 0.01 : 0.0) );						
 			}
 		}
 		myMatrix = convolve;
@@ -175,14 +180,14 @@ public class MatrixLetter {
 	public void incrementTime() {
 		myTime = myTime + 1;
 		eraseLetter();
-		if (myTime < 20) {
+		if (myTime < oldAge) {
 			disperseCloud();
 			makeLetter();
 		}
 	}
 	
 	public boolean isLetterOld() {
-		if (myTime < 20) {
+		if (myTime < oldAge) {
 			return false;  
 		} else {
 			return true;   // delete this letter
@@ -217,6 +222,8 @@ public class MatrixLetter {
 	
 	private byte mapTimeToColor(int value) {
 		if (value > 50) {
+			return((byte) 0x3);  // blue
+		} else if (value > 20) {
 			return((byte) 0x8);  // Light gray
 		} else {
 			return((byte) 0x0);  // White
@@ -231,7 +238,7 @@ public class MatrixLetter {
 		
 		for (int x = 0; x < charMatrixHeight; x++) {
 			for (int z = 0; z < charMatrixWidth; z++) {
-				if (myMatrix[x][z] > 10) {
+				if (myMatrix[x][z] > drawThreshold) {
             		Block b = world.getBlockAt(xloc+x,yloc,zloc+z);
             		if (b.getType() == Material.AIR) {
             			b.setType(Material.WOOL);
@@ -252,7 +259,7 @@ public class MatrixLetter {
 		
 		for (int x = 0; x < charMatrixHeight; x++) {
 			for (int z = 0; z < charMatrixWidth; z++) {
-				if (myMatrix[x][z] > 10) {
+				if (myMatrix[x][z] > drawThreshold) {
             		Block b = world.getBlockAt(xloc+x,yloc,zloc+z);
             		if (b.getType() == Material.WOOL) {
             			b.setType(Material.AIR);

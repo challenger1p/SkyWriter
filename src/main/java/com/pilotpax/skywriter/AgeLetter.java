@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// When called by the scheduler, update the age of all the letters.
+
 public class AgeLetter implements Runnable {
 
 	@Override

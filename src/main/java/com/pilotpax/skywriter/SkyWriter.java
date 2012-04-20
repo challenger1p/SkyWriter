@@ -19,13 +19,9 @@ package com.pilotpax.skywriter;
     along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.logging.Logger;
-import java.util.List;
 
 public class SkyWriter extends JavaPlugin {
 	

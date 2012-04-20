@@ -4,9 +4,9 @@
 	<groupId>com.pilotpax.skywriter</groupId>
 	<artifactId>SkyWriter</artifactId>
 	<packaging>jar</packaging>
-	<version>SkyWriter-1.0</version>
-	<name>bukkitplugin</name>
-	<url>http://maven.apache.org</url>
+	<version>v0.1</version>
+	<name>SkyWriter</name>
+	<url>http://skywriter.pilotpax.com</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>

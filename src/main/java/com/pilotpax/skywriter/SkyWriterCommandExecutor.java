@@ -26,13 +26,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class SkyWriterCommandExecutor implements CommandExecutor {
 
+	private static final int skyLevel = 120;
+	
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
 	
     private SkyWriter plugin;
@@ -49,21 +49,25 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
         if (command.getName().equalsIgnoreCase("skywrite")) {
         	log.info("skywrite used");
 
-        	Player player = (Player) sender;
-        	Location loc = player.getLocation();
-        	World world = loc.getWorld(); 
-        	int x_s = loc.getBlockX();   
-        	int y_s = loc.getBlockY();    
-        	int z_s = loc.getBlockZ();
-        	Location bloc = new Location(world, x_s, y_s + 20, z_s);
+        	if (sender == null || !(sender instanceof Player)) {
+    			sender.sendMessage("this command can only be run by a player");
+    		} else {
+    			Player player = (Player) sender;
+    			Location loc = player.getLocation();
+    			World world = loc.getWorld(); 
+    			int x_s = loc.getBlockX();   
+//    			int y_s = loc.getBlockY();    
+    			int z_s = loc.getBlockZ();
+    			Location bloc = new Location(world, x_s, skyLevel, z_s);
         	
-        	String word = args[0];
-        	for (int j=0; j<word.length(); j++) {
-        		MatrixLetter m = new MatrixLetter(word.charAt(j),bloc); 
-        		bloc = m.nextLocation();
-        		allLetters.add(m);
-        		}
-            return true;
+    			String word = args[0];
+    			for (int j=0; j<word.length(); j++) {
+    				MatrixLetter m = new MatrixLetter(word.charAt(j),bloc); 
+    				bloc = m.nextLocation();
+    				allLetters.add(m);
+        			}
+    			return true;
+    		}
         }
         return false;
     }
