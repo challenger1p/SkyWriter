@@ -26,7 +26,8 @@ import org.bukkit.World;
 
 public class MatrixLetter {
 	
-	private static int oldAge = 20;
+	private static int startDispersal = 5;
+	private static int oldAge = 25;
 	private static int drawThreshold = 10;
 	
 	private static int charMatrixHeight = 8;
@@ -179,10 +180,12 @@ public class MatrixLetter {
 
 	public void incrementTime() {
 		myTime = myTime + 1;
-		eraseLetter();
-		if (myTime < oldAge) {
-			disperseCloud();
-			makeLetter();
+		if (myTime > startDispersal) {
+			eraseLetter();
+			if (myTime < oldAge) {
+				disperseCloud();
+				makeLetter();
+			}
 		}
 	}
 	

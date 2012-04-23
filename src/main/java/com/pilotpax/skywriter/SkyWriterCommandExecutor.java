@@ -36,7 +36,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
 	
     private SkyWriter plugin;
-    Logger log = Logger.getLogger("Minecraft");//Define your logger
+    Logger log = Logger.getLogger("Minecraft");
 
     public SkyWriterCommandExecutor(SkyWriter plugin) {
         this.plugin = plugin;
@@ -44,7 +44,6 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        log.info("onCommand Reached in SkyWriter");
 
         if (command.getName().equalsIgnoreCase("skywrite")) {
         	log.info("skywrite used");
