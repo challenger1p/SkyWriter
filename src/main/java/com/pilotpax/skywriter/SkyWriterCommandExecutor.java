@@ -136,6 +136,6 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     	for (MatrixLetter m : allLetters) {
     		m.eraseLetter();
     	}
-    	allLetters.removeAll(allLetters);
+    	allLetters = new ArrayList<MatrixLetter>();
     }
 }
