@@ -20,6 +20,7 @@ along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import org.bukkit.block.Block;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -32,6 +33,10 @@ public class MatrixLetter {
 	
 	private static int charMatrixHeight = 8;
 	private static int charMatrixWidth = 8;
+
+	public enum Orientation {
+		XPLUS, ZPLUS, XMINUS, ZMINUS
+	}	
 	
 	private static int charMatrix[] = {
 		0x7F, 0x88, 0x88, 0x88, 0x7F, 0x00, 0x00, 0x00,  // A
@@ -105,7 +110,9 @@ public class MatrixLetter {
 		0x00, 0x81, 0x42, 0x3C, 0x00, 0x00, 0x00, 0x00,  // )
 		0x08, 0x08, 0x3E, 0x08, 0x08, 0x00, 0x00, 0x00,  // +
 		0x08, 0x08, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00,  // -
-		0x14, 0x14, 0x14, 0x14, 0x14, 0x00, 0x00, 0x00   // =
+		0x14, 0x14, 0x14, 0x14, 0x14, 0x00, 0x00, 0x00,  // =
+		0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00,  // '
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // space
 	};
 	
 	private static char charMatrixIndex[] = {
@@ -122,7 +129,7 @@ public class MatrixLetter {
 		'1', '2', '3', '4', '5', '6',
 		'7', '8', '9', '?', '!', '0',
 		'@', '#', '&', '(', ')', '+',
-		'-', '='
+		'-', '=', '\'', ' '
 	};
 	
 	private static int undefChar = 61;
@@ -132,6 +139,7 @@ public class MatrixLetter {
 	int[][] myMatrix;
 	Location myLoc;
 	int myTime;
+	Orientation myOrientation;
 	
 	public void setLetter(char c) {
 		myChar = c;
@@ -162,6 +170,10 @@ public class MatrixLetter {
 	
 	public void setTime(int t) {
 		myTime = t;
+	}
+	
+	public void setOrientation(Orientation o) {
+		myOrientation = o;
 	}
 	
 	// sort of a one-sided gaussian blur kernel...
@@ -201,6 +213,10 @@ public class MatrixLetter {
 		return myTime;
 	}
 	
+	public Orientation getOrientation() {
+		return myOrientation;
+	}
+	
 	public void printLetter() {
 		for (int x = 0; x < charMatrixHeight; x++) {
 			for (int y = 0; y < charMatrixWidth; y++) {
@@ -215,25 +231,37 @@ public class MatrixLetter {
 	}	
 
 	public Location nextLocation() {
-    	World world = myLoc.getWorld();   	 
-    	int xloc = myLoc.getBlockX();   
-    	int yloc = myLoc.getBlockY();    
-    	int zloc = myLoc.getBlockZ();
+		World world = myLoc.getWorld();   	 
+		int xloc = myLoc.getBlockX();   
+		int yloc = myLoc.getBlockY();    
+		int zloc = myLoc.getBlockZ();
 
-    	return(new Location(world, xloc + charMatrixHeight, yloc, zloc));
+		switch (myOrientation) {
+		case XPLUS: xloc += charMatrixHeight;
+		break;
+		case XMINUS: xloc -= charMatrixHeight;
+		break;
+		case ZPLUS: zloc += charMatrixHeight;
+		break;
+		case ZMINUS: zloc -= charMatrixHeight;
+		break;
+		}
+
+		return(new Location(world, xloc, yloc, zloc));
 	}
 	
-	private byte mapTimeToColor(int value) {
+	private DyeColor mapTimeToColor(int value) {
 		if (value > 50) {
-			return((byte) 0x3);  // blue
+			return(DyeColor.LIGHT_BLUE);  // blue
 		} else if (value > 20) {
-			return((byte) 0x8);  // Light gray
+			return(DyeColor.SILVER);  // Light gray
 		} else {
-			return((byte) 0x0);  // White
+			return(DyeColor.WHITE);  // White
 		}
 	}
 	
 	public void makeLetter() {
+		Block b = null;
     	World world = myLoc.getWorld();   	 
     	int xloc = myLoc.getBlockX();   
     	int yloc = myLoc.getBlockY();    
@@ -242,10 +270,19 @@ public class MatrixLetter {
 		for (int x = 0; x < charMatrixHeight; x++) {
 			for (int z = 0; z < charMatrixWidth; z++) {
 				if (myMatrix[x][z] > drawThreshold) {
-            		Block b = world.getBlockAt(xloc+x,yloc,zloc+z);
+					switch(myOrientation) {
+					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
+					break;
+					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
+					break;
+					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
+					break;
+					case ZMINUS: b = world.getBlockAt(xloc+z,yloc,zloc+charMatrixHeight-x);
+					break;
+					}
             		if (b.getType() == Material.AIR) {
             			b.setType(Material.WOOL);
-            			b.setData(mapTimeToColor(myMatrix[x][z]));  
+            			b.setData(mapTimeToColor(myMatrix[x][z]).getData());  
             		} else {
             			myMatrix[x][z] = 0;
             		}
@@ -255,6 +292,7 @@ public class MatrixLetter {
 	}
 	
 	public void eraseLetter() {
+		Block b = null;
     	World world = myLoc.getWorld();   	 
     	int xloc = myLoc.getBlockX();   
     	int yloc = myLoc.getBlockY();    
@@ -263,7 +301,16 @@ public class MatrixLetter {
 		for (int x = 0; x < charMatrixHeight; x++) {
 			for (int z = 0; z < charMatrixWidth; z++) {
 				if (myMatrix[x][z] > drawThreshold) {
-            		Block b = world.getBlockAt(xloc+x,yloc,zloc+z);
+					switch(myOrientation) {
+					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
+					break;
+					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
+					break;
+					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
+					break;
+					case ZMINUS: b = world.getBlockAt(xloc+z,yloc,zloc+charMatrixHeight-x);
+					break;
+					}
             		if (b.getType() == Material.WOOL) {
             			b.setType(Material.AIR);
             		} 
@@ -272,10 +319,11 @@ public class MatrixLetter {
 		}		
 	}
 		
-	public MatrixLetter(char c, Location loc) {
+	public MatrixLetter(char c, Location loc, Orientation o) {
 		setLetter(c);
 		setLocation(loc);
 		setTime(0);
+		setOrientation(o);
 		makeLetter();
 	}
 }

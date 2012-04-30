@@ -1,8 +1,13 @@
 name: SkyWriter
 main: com.pilotpax.skywriter.SkyWriter
-version: 0.1
+version: 0.2
 
 commands:
    skywrite:
       description: Writes letters in the sky
       usage: /<command> string 
+
+permissions:
+   skywrite.use:
+      description: Allows you to use the skywrite command
+      default: true

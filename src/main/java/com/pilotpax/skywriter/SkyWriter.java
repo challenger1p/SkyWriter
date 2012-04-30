@@ -33,6 +33,7 @@ public class SkyWriter extends JavaPlugin {
 
 	public void onDisable() {
 		log.info("Disabling SkyWriter Plugin");
+		SkyWriterCommandExecutor.removeAllLetters();
 	}
 
 	public void onEnable() {

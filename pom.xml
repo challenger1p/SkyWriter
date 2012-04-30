@@ -4,7 +4,7 @@
 	<groupId>com.pilotpax.skywriter</groupId>
 	<artifactId>SkyWriter</artifactId>
 	<packaging>jar</packaging>
-	<version>v0.1</version>
+	<version>v0.2</version>
 	<name>SkyWriter</name>
 	<url>http://skywriter.pilotpax.com</url>
 	<properties>
