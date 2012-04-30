@@ -237,9 +237,9 @@ public class MatrixLetter {
 		int zloc = myLoc.getBlockZ();
 
 		switch (myOrientation) {
-		case XPLUS: xloc += charMatrixHeight;
-		break;
 		case XMINUS: xloc -= charMatrixHeight;
+		break;
+		case XPLUS: xloc += charMatrixHeight;
 		break;
 		case ZPLUS: zloc += charMatrixHeight;
 		break;
@@ -271,9 +271,9 @@ public class MatrixLetter {
 			for (int z = 0; z < charMatrixWidth; z++) {
 				if (myMatrix[x][z] > drawThreshold) {
 					switch(myOrientation) {
-					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
-					break;
 					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
+					break;
+					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
 					break;
 					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
 					break;
@@ -302,9 +302,9 @@ public class MatrixLetter {
 			for (int z = 0; z < charMatrixWidth; z++) {
 				if (myMatrix[x][z] > drawThreshold) {
 					switch(myOrientation) {
-					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
-					break;
 					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
+					break;
+					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
 					break;
 					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
 					break;

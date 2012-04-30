@@ -70,9 +70,9 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     	
     	if (Math.abs(v.getX()) < Math.abs(v.getZ())) {
     		if (v.getZ() > 0) {
-    			return(MatrixLetter.Orientation.XPLUS);
-    		} else {
     			return(MatrixLetter.Orientation.XMINUS);
+    		} else {
+    			return(MatrixLetter.Orientation.XPLUS);
     		}
     	} else {
     		if (v.getX() > 0) {
@@ -103,6 +103,11 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 //    				Boat plane = (Boat) world.spawn(bloc, EntityType.BOAT.getEntityClass());
 //    				plane.setVelocity(new Vector(0,0,0));
 
+//    					if (o == MatrixLetter.Orientation.XPLUS) { args[0] = new String("XPLUS"); }
+//    					else if (o == MatrixLetter.Orientation.XMINUS) { args[0] = new String("XMINUS"); }
+//    					else if (o == MatrixLetter.Orientation.ZPLUS) { args[0] = new String("ZPLUS"); }
+//    					else if (o == MatrixLetter.Orientation.ZMINUS) { args[0] = new String("ZMINUS"); }
+    					
     					for (String word : args) {
     						for (int j=0; j<word.length(); j++) {
     							MatrixLetter m = new MatrixLetter(word.charAt(j),bloc,o); 
