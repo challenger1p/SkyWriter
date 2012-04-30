@@ -98,16 +98,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     				Location bloc = whereToDraw(player);
     				MatrixLetter.Orientation o = orientToDraw(player);
     				
-    				if (bloc != null) {
-    					
-//    				Boat plane = (Boat) world.spawn(bloc, EntityType.BOAT.getEntityClass());
-//    				plane.setVelocity(new Vector(0,0,0));
-
-//    					if (o == MatrixLetter.Orientation.XPLUS) { args[0] = new String("XPLUS"); }
-//    					else if (o == MatrixLetter.Orientation.XMINUS) { args[0] = new String("XMINUS"); }
-//    					else if (o == MatrixLetter.Orientation.ZPLUS) { args[0] = new String("ZPLUS"); }
-//    					else if (o == MatrixLetter.Orientation.ZMINUS) { args[0] = new String("ZMINUS"); }
-    					
+    				if (bloc != null) {   					
     					for (String word : args) {
     						for (int j=0; j<word.length(); j++) {
     							MatrixLetter m = new MatrixLetter(word.charAt(j),bloc,o); 
