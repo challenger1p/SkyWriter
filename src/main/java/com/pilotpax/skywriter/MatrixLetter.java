@@ -112,7 +112,8 @@ public class MatrixLetter {
 		0x08, 0x08, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00,  // -
 		0x14, 0x14, 0x14, 0x14, 0x14, 0x00, 0x00, 0x00,  // =
 		0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00,  // '
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // space
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // space
+		0x70, 0x8C, 0x42, 0x21, 0x42, 0x8C, 0x70, 0x00   // heart
 	};
 	
 	private static char charMatrixIndex[] = {
@@ -129,17 +130,22 @@ public class MatrixLetter {
 		'1', '2', '3', '4', '5', '6',
 		'7', '8', '9', '?', '!', '0',
 		'@', '#', '&', '(', ')', '+',
-		'-', '=', '\'', ' '
+		'-', '=', '\'', ' ', '\u2665'
 	};
 	
 	private static int undefChar = 61;
 	
-	char myChar;
-	int matrixIndex;
-	int[][] myMatrix;
-	Location myLoc;
-	int myTime;
-	Orientation myOrientation;
+	char myChar;                // character for this letter
+	int matrixIndex;            // pointer to character list
+	int[][] myMatrix;           // 8x8 integer matrix holding "pixel" values, which degrade as letter disperses
+	Location myLoc;             // location of this letter
+	int myTime;                 // age of this letter
+	int myTick;                 // clock ticks for speed adjustments
+	Orientation myOrientation;  // letter orientation
+	int myAgeSpeed;             // scales standard aging by this factor
+	boolean myDisperse;         // true if letter will disperse over time
+	Material myMaterial;        // the type of material this letter is made of
+	boolean myUpright;          // true if the letter should be upright
 	
 	public void setLetter(char c) {
 		myChar = c;
@@ -170,6 +176,7 @@ public class MatrixLetter {
 	
 	public void setTime(int t) {
 		myTime = t;
+		myTick = 0;
 	}
 	
 	public void setOrientation(Orientation o) {
@@ -191,12 +198,17 @@ public class MatrixLetter {
 	}
 
 	public void incrementTime() {
-		myTime = myTime + 1;
-		if (myTime > startDispersal) {
-			eraseLetter();
-			if (myTime < oldAge) {
-				disperseCloud();
-				makeLetter();
+		if (myTick < (myAgeSpeed-1)) {
+			myTick++;
+		} else {
+			myTick = 0;
+			myTime = myTime + 1;
+			if (myTime > startDispersal && myDisperse) {
+				eraseLetter();
+				if (myTime < oldAge) {
+					disperseCloud();
+					makeLetter();
+				}
 			}
 		}
 	}
@@ -205,7 +217,7 @@ public class MatrixLetter {
 		if (myTime < oldAge) {
 			return false;  
 		} else {
-			return true;   // delete this letter
+			return myDisperse;   // delete this letter if disperse is true
 		}
 	}
 	
@@ -259,8 +271,8 @@ public class MatrixLetter {
 			return(DyeColor.WHITE);  // White
 		}
 	}
-	
-	public void makeLetter() {
+
+	public void modLetter(boolean erase) {
 		Block b = null;
     	World world = myLoc.getWorld();   	 
     	int xloc = myLoc.getBlockX();   
@@ -271,59 +283,51 @@ public class MatrixLetter {
 			for (int z = 0; z < charMatrixWidth; z++) {
 				if (myMatrix[x][z] > drawThreshold) {
 					switch(myOrientation) {
-					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
+					case XMINUS: b = myUpright ? world.getBlockAt(xloc+charMatrixHeight-x,yloc-charMatrixWidth+z,zloc) : 
+						world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
 					break;
-					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
+					case XPLUS: b = myUpright ? world.getBlockAt(xloc+x,yloc-charMatrixWidth+z,zloc) : 
+						world.getBlockAt(xloc+x,yloc,zloc+z);
 					break;
-					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
+					case ZPLUS: b = myUpright ? world.getBlockAt(xloc,yloc-charMatrixWidth+z,zloc+x) : 
+						world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
 					break;
-					case ZMINUS: b = world.getBlockAt(xloc+z,yloc,zloc+charMatrixHeight-x);
+					case ZMINUS: b = myUpright ? world.getBlockAt(xloc,yloc-charMatrixWidth+z,zloc+charMatrixHeight-x) : 
+						world.getBlockAt(xloc+z,yloc,zloc+charMatrixHeight-x);
 					break;
 					}
-            		if (b.getType() == Material.AIR) {
-            			b.setType(Material.WOOL);
-            			b.setData(mapTimeToColor(myMatrix[x][z]).getData());  
+            		if (b.getType() == myMaterial && erase) {
+            			b.setType(Material.AIR);
+            		} else if (b.getType() == Material.AIR && !erase) {
+            			b.setType(myMaterial);
+            			if (myMaterial == Material.WOOL) {
+            				b.setData(mapTimeToColor(myMatrix[x][z]).getData());  
+            			}
             		} else {
             			myMatrix[x][z] = 0;
             		}
 				} 
 			}
-		}
+		}		
+	}
+	
+	public void makeLetter() {
+		modLetter(false);
 	}
 	
 	public void eraseLetter() {
-		Block b = null;
-    	World world = myLoc.getWorld();   	 
-    	int xloc = myLoc.getBlockX();   
-    	int yloc = myLoc.getBlockY();    
-    	int zloc = myLoc.getBlockZ();
-		
-		for (int x = 0; x < charMatrixHeight; x++) {
-			for (int z = 0; z < charMatrixWidth; z++) {
-				if (myMatrix[x][z] > drawThreshold) {
-					switch(myOrientation) {
-					case XMINUS: b = world.getBlockAt(xloc+charMatrixHeight-x,yloc,zloc+charMatrixWidth-z);
-					break;
-					case XPLUS: b = world.getBlockAt(xloc+x,yloc,zloc+z);
-					break;
-					case ZPLUS: b = world.getBlockAt(xloc+charMatrixWidth-z,yloc,zloc+x);
-					break;
-					case ZMINUS: b = world.getBlockAt(xloc+z,yloc,zloc+charMatrixHeight-x);
-					break;
-					}
-            		if (b.getType() == Material.WOOL) {
-            			b.setType(Material.AIR);
-            		} 
-				}
-			}
-		}		
+		modLetter(true);
 	}
 		
-	public MatrixLetter(char c, Location loc, Orientation o) {
+	public MatrixLetter(char c, Location loc, Orientation o, int agespeed, boolean disp, Material m, boolean upright) {
 		setLetter(c);
 		setLocation(loc);
 		setTime(0);
 		setOrientation(o);
+		myAgeSpeed = agespeed;
+		myDisperse = disp;
+		myMaterial = m;
+		myUpright = upright;
 		makeLetter();
 	}
 }

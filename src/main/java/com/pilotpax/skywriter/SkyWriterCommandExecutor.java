@@ -20,6 +20,7 @@ package com.pilotpax.skywriter;
  */
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -32,8 +33,8 @@ import java.util.logging.Logger;
 
 public class SkyWriterCommandExecutor implements CommandExecutor {
 
-	private static final int skyLevel = 120;
-	private static final double lookUp = 0.2;
+	private static final int skyLevel = 120;  // height at which letters are rendered
+	private static final double lookUp = 0.2; // player needs to look up greater than arcsin(0.2) = 12 degrees
 	
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
 	
@@ -44,6 +45,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    // figure out where to put letters, by extending unit vector of where player is looking to sky level
     public Location whereToDraw(Player player) {
 		Location loc = player.getLocation();
 		World world = loc.getWorld(); 
@@ -64,6 +66,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 		}
     }
     
+    // based on quadrant in which letters are being placed, adjust orientation so they appear upright
     public MatrixLetter.Orientation orientToDraw(Player player) {
 
     	Vector v = player.getEyeLocation().getDirection();
@@ -88,35 +91,75 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 
         if (command.getName().equalsIgnoreCase("skywrite")) {
 
+        	ParseCommand cmd = new ParseCommand(args);
+        	
         	if (sender == null || !(sender instanceof Player)) {
-    			sender.sendMessage("This command can only be run by a player");
+        		
+                World w = plugin.getServer().getWorld(cmd.getWorld());
+                int xloc = cmd.getXloc();
+                int zloc = cmd.getZloc();
+
+
+                if(w != null  && cmd.getLocUsed()) {
+
+        			sender.sendMessage("Placing message in world " + cmd.getWorld() + " at (" + xloc + "," + zloc + ")");
+                	
+                	Location bloc = new Location(w, xloc, skyLevel, zloc);
+					
+    				MatrixLetter.Orientation o = MatrixLetter.Orientation.XPLUS;
+
+                	int speed = cmd.getSpeed();
+					boolean disperse = cmd.getDisperse();
+    				Material matl = cmd.getMaterial();
+    				boolean upright = cmd.getUpright();
+    				
+    				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
+
+    				if (bloc != null) { return true; }
+                }		
     		} else {
     			Player player = (Player) sender;
     			if (player.hasPermission("skywriter.use")) {
     				log.info("skywrite command used by " + player.getName());
 
     				Location bloc = whereToDraw(player);
-    				MatrixLetter.Orientation o = orientToDraw(player);
     				
-    				if (bloc != null) {   					
-    					for (String word : args) {
-    						for (int j=0; j<word.length(); j++) {
-    							MatrixLetter m = new MatrixLetter(word.charAt(j),bloc,o); 
-    							bloc = m.nextLocation();
-    							allLetters.add(m);
-    						}
-    						MatrixLetter m = new MatrixLetter(' ',bloc,o); 
-    						bloc = m.nextLocation();
-    						allLetters.add(m);    					
-    					}
-    					return true;
+    				if (cmd.getLocUsed() && player.hasPermission("skywriter.location")) {
+    					bloc.setX((double) cmd.getXloc());
+    					bloc.setZ((double) cmd.getZloc());
     				}
+    				
+    				MatrixLetter.Orientation o = orientToDraw(player);
+
+    				// add permission check
+					int speed = player.hasPermission("skywriter.speed") ? cmd.getSpeed() : cmd.getDefaultSpeed();
+					boolean disperse = player.hasPermission("skywriter.permanent") ? cmd.getDisperse() : cmd.getDefaultDisperse();
+    				Material matl = player.hasPermission("skywriter.material") ? cmd.getMaterial() : cmd.getDefaultMaterial();
+    				boolean upright = cmd.getUpright();
+    				
+    				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);
+    				
+    				if (bloc != null) { return true; }
     			}
     		}
         }
         return false;
     }
 
+    // create letters and add them to the list of letters
+    public static void addLetters(String msg, Location loc, MatrixLetter.Orientation o, int speed,
+    		                      boolean disperse, Material matl, boolean upright) {
+    	
+		if (loc != null) {
+			for (int j=0; j<msg.length(); j++) {
+				MatrixLetter m = new MatrixLetter(msg.charAt(j), loc, o, speed, disperse, matl, upright); 
+				loc = m.nextLocation();
+				allLetters.add(m);
+			}
+		}   	
+    }
+    
+    // increment the age of all the letters - called from AgeLetter, which is called by the scheduler
     public static void incrementAllLetters() {
     	ArrayList<MatrixLetter> toRemove = new ArrayList<MatrixLetter>();
     	for (MatrixLetter m : allLetters) {
@@ -128,6 +171,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     	allLetters.removeAll(toRemove);
     }
         
+    // remove all the letters - called when the plugin is disabled
     public static void removeAllLetters() {
     	for (MatrixLetter m : allLetters) {
     		m.eraseLetter();

@@ -19,7 +19,6 @@ package com.pilotpax.skywriter;
     along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.logging.Logger;
 
@@ -39,7 +38,7 @@ public class SkyWriter extends JavaPlugin {
 	public void onEnable() {
         log.info("Enabling SkyWriter Plugin");
 
-        PluginManager pm = this.getServer().getPluginManager();
+//        PluginManager pm = this.getServer().getPluginManager();
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new AgeLetter(), 0, 100L);
         getCommand("skywrite").setExecutor(commandExecutor);
 	}
