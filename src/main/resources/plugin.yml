@@ -1,13 +1,26 @@
 name: SkyWriter
 main: com.pilotpax.skywriter.SkyWriter
-version: 0.3
+version: 1.0
+author: challenger1p
 
 commands:
    skywrite:
       description: Writes letters in the sky
-      usage: /<command> string 
+      usage: /<command> [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] string 
 
 permissions:
    skywriter.use:
       description: Allows you to use the skywrite command
       default: true
+   skywriter.location:
+      description: Allows the message to be placed at a specified x,z location
+      default: op
+   skywriter.speed: 
+      description: Allows the speed of message dispersal to be changed
+      default: true
+   skywriter.permanent:
+      description: Allows the message to be permanent (not disperse)
+      default: op
+   skywriter.material:
+      description: Allows the block type of the message to be specified
+      default: op

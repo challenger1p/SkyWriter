@@ -221,6 +221,10 @@ public class MatrixLetter {
 		}
 	}
 	
+	public boolean isDisperse() {
+		return myDisperse;
+	}
+	
 	public int getTime() {
 		return myTime;
 	}

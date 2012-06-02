@@ -174,7 +174,9 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     // remove all the letters - called when the plugin is disabled
     public static void removeAllLetters() {
     	for (MatrixLetter m : allLetters) {
-    		m.eraseLetter();
+    		if (m.isDisperse()) { 
+    			m.eraseLetter(); 
+    		}
     	}
     	allLetters = new ArrayList<MatrixLetter>();
     }
