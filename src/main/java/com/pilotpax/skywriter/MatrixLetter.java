@@ -33,10 +33,6 @@ public class MatrixLetter {
 	
 	private static int charMatrixHeight = 8;
 	private static int charMatrixWidth = 8;
-
-	public enum Orientation {
-		XPLUS, ZPLUS, XMINUS, ZMINUS
-	}	
 	
 	private static int charMatrix[] = {
 		0x7F, 0x88, 0x88, 0x88, 0x7F, 0x00, 0x00, 0x00,  // A

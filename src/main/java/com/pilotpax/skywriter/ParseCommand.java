@@ -19,10 +19,15 @@ You should have received a copy of the GNU General Public License
 along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+
 import org.bukkit.Material;
 
 public class ParseCommand {
-
+	private static int fontsize = 20;
+	private static int fonttype = Font.PLAIN;
+	
 	private int agespeed;        // how long the message should last
 	private boolean disperse;    // should the message disperse over time
 	private Material material;   // what the message should be made of
@@ -32,6 +37,7 @@ public class ParseCommand {
 	private boolean upright;     // should the message be upright or not
 	private String message;      // the message that should be written
 	private String world;        // world in which the message should appear
+	private Font font;           // font which should be used for message
 	
 	public int getSpeed() {
 		return agespeed;
@@ -81,6 +87,19 @@ public class ParseCommand {
 		return Material.WOOL;
 	}
 	
+	public Font getFont() {
+		return font;
+	}
+	
+	public boolean checkFontName(String fn) {
+		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		String[] fontNames = env.getAvailableFontFamilyNames();
+		for(int i=0; i<fontNames.length; i++) {
+			if (fontNames[i].equals(fn)) { return true; }
+		}
+		return false;
+	}
+	
 	// Parse the command arguments:
 	// /skywrite [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] message...
 	//    n is scaling for the speed of dispersing (i.e. 2 = 2x slower, etc)
@@ -97,10 +116,12 @@ public class ParseCommand {
 		boolean get_matl = false;
 		boolean get_loc = false;
 		boolean get_world = false;
+		boolean get_font = false;
 		
 		agespeed = getDefaultSpeed();
 		disperse = getDefaultDisperse();
 		material = getDefaultMaterial();
+		font = null;
 		locused = false;
 		xloc = 0;
 		zloc = 0;
@@ -109,38 +130,50 @@ public class ParseCommand {
 		world = "world";
 		
 		for(String word : args) {
-			if (!inmessage && word.matches("^-(s|(speed))$")) {
+			if (!inmessage && word.matches("^-(f|(font))$")) {
+				get_age = false;
+				get_matl = false;
+				get_loc = false;
+				get_world = false;
+				get_font = true;
+			} else if (!inmessage && word.matches("^-(s|(speed))$")) {
 				get_age = true;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
+				get_font = false;
 			} else if (!inmessage && word.matches("^-(b|(block))$")) {
 				get_age = false;
 				get_matl = true;
 				get_loc = false;
 				get_world = false;
+				get_font = false;
 			} else if (!inmessage && word.matches("^-(l|(loc))$")) {
 				get_age = false;
 				get_matl = false;
 				get_loc = true;
 				get_world = false;
+				get_font = false;
 			} else if (!inmessage && word.matches("^-(u|(upright))$")) {
 				upright = true;
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
+				get_font = false;
 			} else if (!inmessage && word.matches("^-(p|(perm))$")) {
 				disperse = false;
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
+				get_font = false;
 			}else if (!inmessage && word.matches("^-(w|(world))$")) {
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = true;				
+				get_font = false;
 			} else if (!inmessage && get_age && word.matches("^[1-9]$")) {
 				get_age = false;
 				agespeed = Integer.parseInt(word);
@@ -156,6 +189,11 @@ public class ParseCommand {
 			} else if (!inmessage && get_world) {
 				get_world = false;
 				world = word;
+			} else if (!inmessage && get_font) {
+				get_font = false;
+				if (checkFontName(word)) {
+					font = new Font(word, fonttype, fontsize);
+				}
 			} else {
 				if (inmessage) { message = message + " "; }
 				inmessage = true;

@@ -1,12 +1,12 @@
 name: SkyWriter
 main: com.pilotpax.skywriter.SkyWriter
-version: 1.0
+version: 1.1
 author: challenger1p
 
 commands:
    skywrite:
       description: Writes letters in the sky
-      usage: /<command> [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] string 
+      usage: /<command> [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] [-f font] string 
 
 permissions:
    skywriter.use:

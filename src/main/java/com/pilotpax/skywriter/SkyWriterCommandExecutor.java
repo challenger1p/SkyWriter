@@ -27,7 +27,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -37,6 +37,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 	private static final double lookUp = 0.2; // player needs to look up greater than arcsin(0.2) = 12 degrees
 	
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
+	private static ArrayList<MatrixString> allStrings = new ArrayList<MatrixString>();
 	
     private SkyWriter plugin;
     Logger log = Logger.getLogger("Minecraft");
@@ -67,21 +68,21 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     }
     
     // based on quadrant in which letters are being placed, adjust orientation so they appear upright
-    public MatrixLetter.Orientation orientToDraw(Player player) {
+    public Orientation orientToDraw(Player player) {
 
     	Vector v = player.getEyeLocation().getDirection();
     	
     	if (Math.abs(v.getX()) < Math.abs(v.getZ())) {
     		if (v.getZ() > 0) {
-    			return(MatrixLetter.Orientation.XMINUS);
+    			return(Orientation.XMINUS);
     		} else {
-    			return(MatrixLetter.Orientation.XPLUS);
+    			return(Orientation.XPLUS);
     		}
     	} else {
     		if (v.getX() > 0) {
-    			return(MatrixLetter.Orientation.ZPLUS);
+    			return(Orientation.ZPLUS);
     		} else {
-    			return(MatrixLetter.Orientation.ZMINUS);
+    			return(Orientation.ZMINUS);
     		}    		
     	}	
     }
@@ -106,15 +107,20 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
                 	
                 	Location bloc = new Location(w, xloc, skyLevel, zloc);
 					
-    				MatrixLetter.Orientation o = MatrixLetter.Orientation.XPLUS;
+    				Orientation o = Orientation.XPLUS;
 
                 	int speed = cmd.getSpeed();
 					boolean disperse = cmd.getDisperse();
     				Material matl = cmd.getMaterial();
     				boolean upright = cmd.getUpright();
+    				Font f = cmd.getFont();
     				
-    				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
-
+       				if (f == null) {
+        				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
+    				} else {
+    					addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, f);
+    				}
+ 
     				if (bloc != null) { return true; }
                 }		
     		} else {
@@ -129,15 +135,20 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     					bloc.setZ((double) cmd.getZloc());
     				}
     				
-    				MatrixLetter.Orientation o = orientToDraw(player);
+    				Orientation o = orientToDraw(player);
 
     				// add permission check
 					int speed = player.hasPermission("skywriter.speed") ? cmd.getSpeed() : cmd.getDefaultSpeed();
 					boolean disperse = player.hasPermission("skywriter.permanent") ? cmd.getDisperse() : cmd.getDefaultDisperse();
     				Material matl = player.hasPermission("skywriter.material") ? cmd.getMaterial() : cmd.getDefaultMaterial();
     				boolean upright = cmd.getUpright();
+    				Font f = cmd.getFont();
     				
-    				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);
+    				if (f == null) {
+        				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);   					
+    				} else {
+    					addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, f);
+    				}
     				
     				if (bloc != null) { return true; }
     			}
@@ -146,8 +157,17 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
         return false;
     }
 
+    // create string and add it to the list of strings
+    public static void addString(String msg, Location loc, Orientation o, int speed,
+    		boolean disperse, Material matl, boolean upright, Font font) {
+    	if (loc != null) {
+    		MatrixString ms = new MatrixString(msg, loc, o, speed, disperse, matl, upright, font);
+    		allStrings.add(ms);
+    	}
+    }
+    
     // create letters and add them to the list of letters
-    public static void addLetters(String msg, Location loc, MatrixLetter.Orientation o, int speed,
+    public static void addLetters(String msg, Location loc, Orientation o, int speed,
     		                      boolean disperse, Material matl, boolean upright) {
     	
 		if (loc != null) {
@@ -169,6 +189,15 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     		}
     	}
     	allLetters.removeAll(toRemove);
+
+    	ArrayList<MatrixString> toRemove2 = new ArrayList<MatrixString>();
+    	for (MatrixString ms : allStrings) {
+    		ms.incrementTime();
+    		if (ms.isStringOld()) {
+    			toRemove2.add(ms);
+    		}
+    	}
+    	allStrings.removeAll(toRemove2);
     }
         
     // remove all the letters - called when the plugin is disabled
@@ -179,5 +208,12 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     		}
     	}
     	allLetters = new ArrayList<MatrixLetter>();
+
+    	for (MatrixString ms : allStrings) {
+    		if (ms.isDisperse()) { 
+    			ms.eraseString(); 
+    		}
+    	}
+    	allStrings = new ArrayList<MatrixString>();    
     }
 }
