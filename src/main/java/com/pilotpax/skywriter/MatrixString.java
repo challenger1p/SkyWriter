@@ -59,8 +59,7 @@ public class MatrixString {
 		}
 
 		// Create another image holding the character we are creating
-		BufferedImage fontImage;
-		fontImage = new BufferedImage(charMatrixWidth, charMatrixHeight, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage fontImage = new BufferedImage(charMatrixWidth, charMatrixHeight, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D gt = (Graphics2D) fontImage.createGraphics();
 		if (myAntiAlias) {
 			gt.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -68,9 +67,7 @@ public class MatrixString {
 		gt.setFont(myFont);
 
 		gt.setColor(Color.WHITE);
-		int charx = 0;
-		int chary = 0;
-		gt.drawString(s, (charx), (chary) + fontMetrics.getAscent());
+		gt.drawString(s, 0, fontMetrics.getAscent());
 
 		return fontImage;
 	}
@@ -253,7 +250,6 @@ public class MatrixString {
 	}
 		
 	public MatrixString(String s, Location loc, Orientation o, int agespeed, boolean disp, Material m, boolean upright, Font font) {
-		setString(s);
 		setLocation(loc);
 		setTime(0);
 		setOrientation(o);
@@ -263,6 +259,8 @@ public class MatrixString {
 		myUpright = upright;
 		myFont = font;
 		myAntiAlias = false;
+		
+		setString(s);
 		makeString();
 	}
 	

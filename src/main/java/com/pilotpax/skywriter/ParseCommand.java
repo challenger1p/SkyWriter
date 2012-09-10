@@ -19,14 +19,9 @@ You should have received a copy of the GNU General Public License
 along with SkyWriter.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.awt.Font;
-import java.awt.GraphicsEnvironment;
-
 import org.bukkit.Material;
 
 public class ParseCommand {
-	private static int fontsize = 20;
-	private static int fonttype = Font.PLAIN;
 	
 	private int agespeed;        // how long the message should last
 	private boolean disperse;    // should the message disperse over time
@@ -37,7 +32,7 @@ public class ParseCommand {
 	private boolean upright;     // should the message be upright or not
 	private String message;      // the message that should be written
 	private String world;        // world in which the message should appear
-	private Font font;           // font which should be used for message
+	private boolean get_font;    // was the font command used
 	
 	public int getSpeed() {
 		return agespeed;
@@ -87,25 +82,19 @@ public class ParseCommand {
 		return Material.WOOL;
 	}
 	
-	public Font getFont() {
-		return font;
+	public boolean getFontused() {
+		return get_font;
 	}
-	
-	public boolean checkFontName(String fn) {
-		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		String[] fontNames = env.getAvailableFontFamilyNames();
-		for(int i=0; i<fontNames.length; i++) {
-			if (fontNames[i].equals(fn)) { return true; }
-		}
-		return false;
-	}
-	
+		
 	// Parse the command arguments:
 	// /skywrite [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] message...
 	//    n is scaling for the speed of dispersing (i.e. 2 = 2x slower, etc)
 	//    b is the name or id of the material for the cloud
 	//    x,z are the x and z coordinates to be drawn at
-	// 
+	//
+	// /skywrite -font fontname
+	//    sets the font to fontname
+	//
 	// by default, the cloud will be made of wool and drawn where the player is looking.
 	//
 	public ParseCommand(String[] args) {
@@ -116,18 +105,17 @@ public class ParseCommand {
 		boolean get_matl = false;
 		boolean get_loc = false;
 		boolean get_world = false;
-		boolean get_font = false;
 		
 		agespeed = getDefaultSpeed();
 		disperse = getDefaultDisperse();
 		material = getDefaultMaterial();
-		font = null;
 		locused = false;
 		xloc = 0;
 		zloc = 0;
 		upright = false;
 		message = "";
 		world = "world";
+		get_font = false;
 		
 		for(String word : args) {
 			if (!inmessage && word.matches("^-(f|(font))$")) {
@@ -189,17 +177,11 @@ public class ParseCommand {
 			} else if (!inmessage && get_world) {
 				get_world = false;
 				world = word;
-			} else if (!inmessage && get_font) {
-				get_font = false;
-				if (checkFontName(word)) {
-					font = new Font(word, fonttype, fontsize);
-				}
 			} else {
 				if (inmessage) { message = message + " "; }
 				inmessage = true;
 				message = message + word;
 			}
-		}
-	}
-	
+		}	
+	}	
 }

@@ -28,24 +28,39 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class SkyWriterCommandExecutor implements CommandExecutor {
+	private static int fontsize = 20;
+	private static int fonttype = Font.PLAIN;
 
 	private static final int skyLevel = 120;  // height at which letters are rendered
 	private static final double lookUp = 0.2; // player needs to look up greater than arcsin(0.2) = 12 degrees
 	
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
 	private static ArrayList<MatrixString> allStrings = new ArrayList<MatrixString>();
+	private static Font skywriteFont = null;
+	private static String[] fontNames;
+	// needs to be a lookup for each player?
 	
     private SkyWriter plugin;
     Logger log = Logger.getLogger("Minecraft");
 
     public SkyWriterCommandExecutor(SkyWriter plugin) {
         this.plugin = plugin;
+		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		fontNames = env.getAvailableFontFamilyNames();
     }
 
+	public boolean checkFontName(String fn) {
+		for(int i=0; i<fontNames.length; i++) {
+			if (fontNames[i].equals(fn)) { return true; }
+		}
+		return false;
+	}
+    
     // figure out where to put letters, by extending unit vector of where player is looking to sky level
     public Location whereToDraw(Player player) {
 		Location loc = player.getLocation();
@@ -95,62 +110,82 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
         	ParseCommand cmd = new ParseCommand(args);
         	
         	if (sender == null || !(sender instanceof Player)) {
-        		
-                World w = plugin.getServer().getWorld(cmd.getWorld());
-                int xloc = cmd.getXloc();
-                int zloc = cmd.getZloc();
+
+        		if (cmd.getFontused()) {
+        			if (checkFontName(cmd.getMessage())) {
+        				skywriteFont = new Font(cmd.getMessage(), fonttype, fontsize);	
+        				sender.sendMessage("Setting font to " + skywriteFont.getFontName());
+        				return(true); 
+					} else {
+						skywriteFont = null;
+					}
+        		} else {
+
+        			World w = plugin.getServer().getWorld(cmd.getWorld());
+        			int xloc = cmd.getXloc();
+        			int zloc = cmd.getZloc();
 
 
-                if(w != null  && cmd.getLocUsed()) {
+        			if(w != null  && cmd.getLocUsed()) {
 
-        			sender.sendMessage("Placing message in world " + cmd.getWorld() + " at (" + xloc + "," + zloc + ")");
-                	
-                	Location bloc = new Location(w, xloc, skyLevel, zloc);
-					
-    				Orientation o = Orientation.XPLUS;
+        				sender.sendMessage("Placing message in world " + cmd.getWorld() + " at (" + xloc + "," + zloc + ")");
 
-                	int speed = cmd.getSpeed();
-					boolean disperse = cmd.getDisperse();
-    				Material matl = cmd.getMaterial();
-    				boolean upright = cmd.getUpright();
-    				Font f = cmd.getFont();
-    				
-       				if (f == null) {
-        				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
-    				} else {
-    					addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, f);
-    				}
- 
-    				if (bloc != null) { return true; }
-                }		
+        				Location bloc = new Location(w, xloc, skyLevel, zloc);
+
+        				Orientation o = Orientation.XPLUS;
+
+        				int speed = cmd.getSpeed();
+        				boolean disperse = cmd.getDisperse();
+        				Material matl = cmd.getMaterial();
+        				boolean upright = cmd.getUpright();
+
+        				if (skywriteFont == null) {
+        					addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
+        				} else {
+        					addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, skywriteFont);
+        				}
+
+        				if (bloc != null) { return true; }
+        			}
+        		}
     		} else {
     			Player player = (Player) sender;
     			if (player.hasPermission("skywriter.use")) {
     				log.info("skywrite command used by " + player.getName());
 
-    				Location bloc = whereToDraw(player);
-    				
-    				if (cmd.getLocUsed() && player.hasPermission("skywriter.location")) {
-    					bloc.setX((double) cmd.getXloc());
-    					bloc.setZ((double) cmd.getZloc());
-    				}
-    				
-    				Orientation o = orientToDraw(player);
-
-    				// add permission check
-					int speed = player.hasPermission("skywriter.speed") ? cmd.getSpeed() : cmd.getDefaultSpeed();
-					boolean disperse = player.hasPermission("skywriter.permanent") ? cmd.getDisperse() : cmd.getDefaultDisperse();
-    				Material matl = player.hasPermission("skywriter.material") ? cmd.getMaterial() : cmd.getDefaultMaterial();
-    				boolean upright = cmd.getUpright();
-    				Font f = cmd.getFont();
-    				
-    				if (f == null) {
-        				addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);   					
+    				if (cmd.getFontused()) {
+    					if (checkFontName(cmd.getMessage())) {
+    						skywriteFont = new Font(cmd.getMessage(), fonttype, fontsize);	
+    						sender.sendMessage("Setting font to " + skywriteFont.getFontName());
+    						return(true); 
+    					} else {
+    						skywriteFont = null;
+    					}
     				} else {
-    					addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, f);
+
+    					Location bloc = whereToDraw(player);
+
+    					if (cmd.getLocUsed() && player.hasPermission("skywriter.location")) {
+    						bloc.setX((double) cmd.getXloc());
+    						bloc.setZ((double) cmd.getZloc());
+    					}
+
+    					Orientation o = orientToDraw(player);
+
+    					// add permission check
+    					int speed = player.hasPermission("skywriter.speed") ? cmd.getSpeed() : cmd.getDefaultSpeed();
+    					boolean disperse = player.hasPermission("skywriter.permanent") ? cmd.getDisperse() : cmd.getDefaultDisperse();
+    					Material matl = player.hasPermission("skywriter.material") ? cmd.getMaterial() : cmd.getDefaultMaterial();
+    					boolean upright = cmd.getUpright();
+
+    					if (skywriteFont == null) {
+    						addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);   					
+    					} else {
+    						addString(cmd.getMessage(), bloc, o, speed, disperse, matl, upright, skywriteFont);
+    					}
+
+    					if (bloc != null) { return true; }
     				}
-    				
-    				if (bloc != null) { return true; }
     			}
     		}
         }
