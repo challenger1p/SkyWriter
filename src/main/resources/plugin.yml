@@ -5,8 +5,10 @@ author: challenger1p
 
 commands:
    skywrite:
-      description: Writes letters in the sky
-      usage: /<command> [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] [-f font] string 
+      description: Writes letters in the sky.
+      usage: |
+        /<command> [-speed n] [-block b] [-loc x,z] [-upright] [-perm] [-w world] string
+        /<command> -font fontname
 
 permissions:
    skywriter.use:
