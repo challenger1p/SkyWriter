@@ -32,7 +32,7 @@ public class ParseCommand {
 	private boolean upright;     // should the message be upright or not
 	private String message;      // the message that should be written
 	private String world;        // world in which the message should appear
-	private boolean get_font;    // was the font command used
+	private boolean getfontused;    // was the font command used
 	
 	public int getSpeed() {
 		return agespeed;
@@ -82,8 +82,8 @@ public class ParseCommand {
 		return Material.WOOL;
 	}
 	
-	public boolean getFontused() {
-		return get_font;
+	public boolean getFontUsed() {
+		return getfontused;
 	}
 		
 	// Parse the command arguments:
@@ -115,66 +115,60 @@ public class ParseCommand {
 		upright = false;
 		message = "";
 		world = "world";
-		get_font = false;
+		getfontused = false;
+		boolean nocommands = false;
 		
 		for(String word : args) {
-			if (!inmessage && word.matches("^-(f|(font))$")) {
-				get_age = false;
-				get_matl = false;
-				get_loc = false;
-				get_world = false;
-				get_font = true;
-			} else if (!inmessage && word.matches("^-(s|(speed))$")) {
+			
+			nocommands = inmessage | getfontused;
+			
+			if (!nocommands && word.matches("^-(f|(font))$")) {
+				getfontused = true;
+			} else if (!nocommands && word.matches("^-(s|(speed))$")) {
 				get_age = true;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
-				get_font = false;
-			} else if (!inmessage && word.matches("^-(b|(block))$")) {
+			} else if (!nocommands && word.matches("^-(b|(block))$")) {
 				get_age = false;
 				get_matl = true;
 				get_loc = false;
 				get_world = false;
-				get_font = false;
-			} else if (!inmessage && word.matches("^-(l|(loc))$")) {
+			} else if (!nocommands && word.matches("^-(l|(loc))$")) {
 				get_age = false;
 				get_matl = false;
 				get_loc = true;
 				get_world = false;
-				get_font = false;
-			} else if (!inmessage && word.matches("^-(u|(upright))$")) {
+			} else if (!nocommands && word.matches("^-(u|(upright))$")) {
 				upright = true;
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
-				get_font = false;
-			} else if (!inmessage && word.matches("^-(p|(perm))$")) {
+			} else if (!nocommands && word.matches("^-(p|(perm))$")) {
 				disperse = false;
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = false;
-				get_font = false;
-			}else if (!inmessage && word.matches("^-(w|(world))$")) {
+			}else if (!nocommands && word.matches("^-(w|(world))$")) {
 				get_age = false;
 				get_matl = false;
 				get_loc = false;
 				get_world = true;				
-				get_font = false;
-			} else if (!inmessage && get_age && word.matches("^[1-9]$")) {
+			} else if (!nocommands && get_age && word.matches("^[1-9]$")) {
 				get_age = false;
 				agespeed = Integer.parseInt(word);
-			} else if (!inmessage && get_matl && (b = BlockType.lookup(word)) != null) {
+			} else if (!nocommands && get_matl && (b = BlockType.lookup(word)) != null) {
 				get_matl = false;
 				material = Material.getMaterial(b.getID());
-			} else if (!inmessage && get_loc && word.matches("^(-|)[0-9]+,(-|)[0-9]+$")) {
+			} else if (!nocommands && get_loc && word.matches("^(-|)[0-9]+,(-|)[0-9]+$")) {
 				get_loc = false;
 				String[] scoord = word.split(",");
 				xloc = Integer.parseInt(scoord[0]);
 				zloc = Integer.parseInt(scoord[1]);
 				locused = true;
-			} else if (!inmessage && get_world) {
+			} else if (!nocommands && get_world) {
 				get_world = false;
 				world = word;
 			} else {

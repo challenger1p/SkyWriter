@@ -30,6 +30,7 @@ import org.bukkit.util.Vector;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 public class SkyWriterCommandExecutor implements CommandExecutor {
@@ -41,9 +42,8 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 	
 	private static ArrayList<MatrixLetter> allLetters = new ArrayList<MatrixLetter>(); 
 	private static ArrayList<MatrixString> allStrings = new ArrayList<MatrixString>();
-	private static Font skywriteFont = null;
 	private static String[] fontNames;
-	// needs to be a lookup for each player?
+	private static HashMap<CommandSender, Font> playerFonts = new HashMap<CommandSender, Font>();
 	
     private SkyWriter plugin;
     Logger log = Logger.getLogger("Minecraft");
@@ -61,6 +61,15 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 		return false;
 	}
     
+	public void showValidFonts(CommandSender sender, char firstletter) {
+		sender.sendMessage("List of available fonts starting with the letter " + firstletter);												
+		for(int i=0; i<fontNames.length; i++) {
+			if (Character.toLowerCase(fontNames[i].charAt(0)) == Character.toLowerCase(firstletter)) {
+				sender.sendMessage(fontNames[i]);		
+			}
+		}		
+	}
+	
     // figure out where to put letters, by extending unit vector of where player is looking to sky level
     public Location whereToDraw(Player player) {
 		Location loc = player.getLocation();
@@ -105,20 +114,25 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
+    	Font skywriteFont;
+    	
         if (command.getName().equalsIgnoreCase("skywrite")) {
 
         	ParseCommand cmd = new ParseCommand(args);
-        	
-        	if (sender == null || !(sender instanceof Player)) {
-
-        		if (cmd.getFontused()) {
+        	if (sender == null) {
+        		return(false);
+        	} else if (!(sender instanceof Player)) {
+        		if (cmd.getFontUsed()) {
         			if (checkFontName(cmd.getMessage())) {
         				skywriteFont = new Font(cmd.getMessage(), fonttype, fontsize);	
         				sender.sendMessage("Setting font to " + skywriteFont.getFontName());
-        				return(true); 
-					} else {
+ 					} else {
+        				sender.sendMessage("Unknown font, setting font to Skywriter built-in font");						
 						skywriteFont = null;
+						showValidFonts(sender,cmd.getMessage().charAt(0));
 					}
+    				playerFonts.put(sender, skywriteFont);
+       				return(true);
         		} else {
 
         			World w = plugin.getServer().getWorld(cmd.getWorld());
@@ -139,6 +153,7 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
         				Material matl = cmd.getMaterial();
         				boolean upright = cmd.getUpright();
 
+        				skywriteFont = playerFonts.get(sender);
         				if (skywriteFont == null) {
         					addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);                    
         				} else {
@@ -153,14 +168,17 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
     			if (player.hasPermission("skywriter.use")) {
     				log.info("skywrite command used by " + player.getName());
 
-    				if (cmd.getFontused()) {
+    				if (cmd.getFontUsed()) {
     					if (checkFontName(cmd.getMessage())) {
     						skywriteFont = new Font(cmd.getMessage(), fonttype, fontsize);	
     						sender.sendMessage("Setting font to " + skywriteFont.getFontName());
-    						return(true); 
     					} else {
+            				sender.sendMessage("Unknown font, setting font to Skywriter built-in font");						
     						skywriteFont = null;
+    						showValidFonts(sender,cmd.getMessage().charAt(0));
     					}
+        				playerFonts.put(sender, skywriteFont);
+        				return(true);
     				} else {
 
     					Location bloc = whereToDraw(player);
@@ -172,12 +190,12 @@ public class SkyWriterCommandExecutor implements CommandExecutor {
 
     					Orientation o = orientToDraw(player);
 
-    					// add permission check
     					int speed = player.hasPermission("skywriter.speed") ? cmd.getSpeed() : cmd.getDefaultSpeed();
     					boolean disperse = player.hasPermission("skywriter.permanent") ? cmd.getDisperse() : cmd.getDefaultDisperse();
     					Material matl = player.hasPermission("skywriter.material") ? cmd.getMaterial() : cmd.getDefaultMaterial();
     					boolean upright = cmd.getUpright();
 
+    					skywriteFont = playerFonts.get(sender);
     					if (skywriteFont == null) {
     						addLetters(cmd.getMessage(), bloc, o, speed, disperse, matl, upright);   					
     					} else {

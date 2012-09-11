@@ -47,19 +47,19 @@ public class MatrixString {
 		FontMetrics fontMetrics = g.getFontMetrics();
 		Rectangle2D r = fontMetrics.getStringBounds(s, g);
 		
-		charMatrixWidth = (int) r.getWidth();
+		charMatrixWidth = (int) r.getHeight();
 
 		if (charMatrixWidth <= 0) {
 			charMatrixWidth = 1;
 		}
-		charMatrixHeight = (int) r.getHeight();
+		charMatrixHeight = (int) r.getWidth();
 
 		if (charMatrixHeight <= 0) {
 			charMatrixHeight = 1;
 		}
 
 		// Create another image holding the character we are creating
-		BufferedImage fontImage = new BufferedImage(charMatrixWidth, charMatrixHeight, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage fontImage = new BufferedImage(charMatrixHeight, charMatrixWidth, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D gt = (Graphics2D) fontImage.createGraphics();
 		if (myAntiAlias) {
 			gt.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -71,22 +71,18 @@ public class MatrixString {
 
 		return fontImage;
 	}
-	
-	
-	
+		
 	public void setString(String s) {
 
 		int[] pixel = null;		
 
 		BufferedImage bi = getFontImage(s);
 		Raster r = bi.getData();
-//		System.out.println(charMatrixHeight);
-//		System.out.println(charMatrixWidth);
 		myMatrix = new int[charMatrixHeight][charMatrixWidth];
 		
 		for (int y = 0; y < charMatrixHeight; y++) {
 		   for (int x = 0; x < charMatrixWidth; x++) {
-				pixel = r.getPixel(x,y,pixel);
+				pixel = r.getPixel(y,(charMatrixWidth-1-x),pixel);
 				if (pixel[0] != 0) {
 					myMatrix[y][x] = 100;
 				} else {
@@ -263,16 +259,5 @@ public class MatrixString {
 		setString(s);
 		makeString();
 	}
-	
-//	public static void main(String[] args) {
-//		
-//		Location l = new Location(null, 0, 0, 0);
-//		Orientation o = Orientation.XPLUS;
-//		Material m = null;
-//		MatrixString ms = new MatrixString("\u597d A \u597d", l, o, 0, true, m, true, new Font("MingLiU", Font.PLAIN, 25));
-//
-//		ms.printString();
-//	
-//	}
-	
+		
 }

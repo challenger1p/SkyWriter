@@ -320,7 +320,6 @@ public class MatrixLetter {
 	}
 		
 	public MatrixLetter(char c, Location loc, Orientation o, int agespeed, boolean disp, Material m, boolean upright) {
-		setLetter(c);
 		setLocation(loc);
 		setTime(0);
 		setOrientation(o);
@@ -328,6 +327,8 @@ public class MatrixLetter {
 		myDisperse = disp;
 		myMaterial = m;
 		myUpright = upright;
+
+		setLetter(c);		
 		makeLetter();
 	}
 }
